@@ -1,0 +1,13 @@
+language: python
+python:
+- '3.6'
+install:
+- pip install pytest
+- pip install .
+script:
+- pytest -s
+deploy:
+  provider: pypi
+  user: magland
+  on:
+    tags: true
