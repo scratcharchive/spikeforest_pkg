@@ -9,7 +9,7 @@ import multiprocessing
 import mtlogging
 # from . import sorters as sorters
 
-from spikesorters import MountainSort4, SpykingCircus, YASS, IronClust, KiloSort, KiloSort2, MountainSort4TestError
+from spikesorters import MountainSort4, SpykingCircus, YASS, IronClust, KiloSort, KiloSort2, MountainSort4TestError, HerdingSpikes2
 
 Processors = dict(
     MountainSort4=(MountainSort4, 'default'),
@@ -18,7 +18,8 @@ Processors = dict(
     KiloSort=(KiloSort, None),
     KiloSort2=(KiloSort2, None),
     Yass=(YASS, 'default'),
-    MountainSort4TestError=(MountainSort4TestError, 'default')
+    MountainSort4TestError=(MountainSort4TestError, 'default'),
+    HerdingSpikes2=(HerdingSpikes2, None),
 )
 
 
@@ -94,7 +95,7 @@ def sort_recordings(*, sorter, recordings, num_workers=None, disable_container=F
 
 
 @mtlogging.log()
-def multi_sort_recordings(*, sorters, recordings, num_workers=None, disable_container=False, job_timeout=60 * 20, label=None, upload_to=None):
+def multi_sort_recordings(*, sorters, recordings, num_workers=None, disable_container=False, job_timeout=60 * 20, label=None, upload_to=None, skip_failing=None):
     print('')
     print('>>>>>> {}'.format(label or 'sort recordings'))
 
@@ -135,6 +136,7 @@ def multi_sort_recordings(*, sorters, recordings, num_workers=None, disable_cont
             dict(
                 _container=SS_container,
                 _timeout=job_timeout,
+                _skip_failing=skip_failing,
                 _label='Sort recording {}/{} using {}'.format(recording.get(
                     'study', ''), recording.get('name', ''), sorter.get('name', '')),
                 _additional_files_to_realize=[
