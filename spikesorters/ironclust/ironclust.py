@@ -97,11 +97,10 @@ class IronClust(mlpr.Processor):
                 all_params[param0.name] = getattr(self, param0.name)
             sorting = ironclust_helper(
                 recording=recording,
-                tmpdir=tmpdir,
-                **all_params,
+                tmpdir=tmpdir,                
                 ironclust_path=ironclust_path,
                 params=params,
-            )
+                **all_params)
             SFMdaSortingExtractor.write_sorting(
                 sorting=sorting, save_path=self.firings_out)
         except:
