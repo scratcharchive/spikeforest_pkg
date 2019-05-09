@@ -26,7 +26,9 @@ class HerdingSpikes2(mlpr.Processor):
       to be made compatible with SpikeForest
 
     [Installation instruction in SpikeForest environment]
-    1. Run `git clone https://github.com/mhhennig/hs2`
+    1. Run `git clone https://github.com/jamesjun/hs2`
+      Note that James Jun forked a new version to make it compatible with singularity container.
+      Original code was creating folders under its source directory which is ready-only in SpikeForest containers.
     2. Activate conda environment for SpikeForest
     3. Run `pip install joblib`
     4. Run `python setup.py develop` in herdingspikes2 doretory
@@ -75,8 +77,7 @@ class HerdingSpikes2(mlpr.Processor):
         recording = SFMdaRecordingExtractor(self.recording_dir)
         clustering_n_jobs = os.environ.get('NUM_WORKERS', None)
 
-        code = ''.join(random.choice(string.ascii_uppercase)
-                       for x in range(10))
+        code = ''.join(random.choice(string.ascii_uppercase) for x in range(10))
         tmpdir = os.environ.get('TEMPDIR', '/tmp') + '/herdingspikes2-tmp-' + code
 
         try:
@@ -106,7 +107,7 @@ class HerdingSpikes2(mlpr.Processor):
                     shutil.rmtree(tmpdir)
             raise
         if not getattr(self, '_keep_temp_files', False):
-            pass
+            shutil.rmtree(tmpdir)
 
 
 def hs2_helper(
