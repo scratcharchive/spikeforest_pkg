@@ -58,7 +58,7 @@ def aggregate_sorting_results(studies, recordings, sorting_results):
                             # put in a zero comparison
                             comparison = dict()
                             for true_unit in true_units_info:
-                                comparison[unit_id] = dict(
+                                comparison[true_unit['unit_id']] = dict(
                                     unit_id=true_unit['unit_id'],
                                     num_false_positives=0,
                                     num_false_negatives=true_unit['num_events'],

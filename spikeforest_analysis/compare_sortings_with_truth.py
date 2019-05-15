@@ -79,18 +79,27 @@ def compare_sortings_with_truth(sortings, compute_resource, num_workers=None, la
 
     for ii, sorting in enumerate(sortings_valid):
         comparison_with_truth = dict()
-        comparison_with_truth['json'] = jobs_gen_table[ii].result.outputs['json_out']
-        comparison_with_truth['html'] = jobs_gen_table[ii].result.outputs['html_out']
-        sorting['comparison_with_truth'] = comparison_with_truth
-        if upload_to:
-            mt.createSnapshot(path=comparison_with_truth['json'], upload_to=upload_to)
-            mt.createSnapshot(path=comparison_with_truth['html'], upload_to=upload_to)
+        res0 = jobs_gen_table[ii].result
+        if res0.retcode == 0:
+            comparison_with_truth['json'] = res0.outputs['json_out']
+            comparison_with_truth['html'] = res0.outputs['html_out']
+            sorting['comparison_with_truth'] = comparison_with_truth
+            if upload_to:
+                mt.createSnapshot(path=comparison_with_truth['json'], upload_to=upload_to)
+                mt.createSnapshot(path=comparison_with_truth['html'], upload_to=upload_to)
+        else:
+            print("WARNING: Problem generating sorting comparison table for sorting (retcode = {}).".format(res0.retcode))
+            print('===================== sorting')
+            print(sorting)
+            print('===================== res0.console_out')
+            print(res0.console_out)
+            raise Exception('Problem generating sorting comparison table for sorting.')
 
     return sortings_out
 
 
 class GenSortingComparisonTable(mlpr.Processor):
-    VERSION = '0.2.0'
+    VERSION = '0.2.4'
     firings = mlpr.Input('Firings file (sorting)')
     firings_true = mlpr.Input('True firings file')
     units_true = mlpr.IntegerListParameter('List of true units to consider')
@@ -99,6 +108,7 @@ class GenSortingComparisonTable(mlpr.Processor):
     CONTAINER = 'sha1://5627c39b9bd729fc011cbfce6e8a7c37f8bcbc6b/spikeforest_basic.simg'
 
     def run(self):
+        print('GenSortingComparisonTable: firings={}, firings_true={}, units_true={}'.format(self.firings, self.firings_true, self.units_true))
         sorting = SFMdaSortingExtractor(firings_file=self.firings)
         sorting_true = SFMdaSortingExtractor(firings_file=self.firings_true)
         if (self.units_true is not None) and (len(self.units_true) > 0):

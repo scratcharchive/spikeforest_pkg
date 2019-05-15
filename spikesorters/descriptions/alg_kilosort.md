@@ -1,14 +1,16 @@
 ---
-label: ALG_KILOSORT
+label: KILOSORT
 dockerfile:
+environment: MATLAB
 wrapper: https://github.com/flatironinstitute/spikeforest/blob/master/spikeforest/spikesorters/kilosort/kilosort.py
 website: https://github.com/cortex-lab/KiloSort
 source_code: https://github.com/cortex-lab/KiloSort
 authors: Marius Pachitariu
+processor_name: KiloSort
 doi: 10.1101/061481
 ---
 _
-# ALG_KILOSORT
+# KILOSORT
 
 ## Description
 

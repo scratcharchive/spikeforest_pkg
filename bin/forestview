@@ -33,7 +33,8 @@ class TheApp():
     def title(self):
         return 'ForestView ({}) - {}'.format(self._mode, self._path)
 
-_default_spikeforest_file = 'key://pairio/spikeforest/spike-front-results.json'
+_default_spikefront_file = 'key://pairio/spikeforest/spike-front-results.json'
+_default_spikeforest_file = 'key://pairio/spikeforest/spikeforest_analysis_results.synth_magland.json'
 
 
 def main():
@@ -63,10 +64,16 @@ def main():
         args.file = args.path
 
     if args.file is None:
-        args.file = _default_spikeforest_file
+        if args.mode == 'spike-front':
+            args.file = _default_spikefront_file
+        elif args.mode == 'spikeforest':
+            args.file = _default_spikeforest_file
+        else:
+            args.file = _default_spikeforest_file
+            args.mode = 'spikeforest'
 
     if args.download_from is None:
-        args.download_from = 'kbucket,public'
+        args.download_from = 'spikeforest.kbucket,spikeforest.public'
 
     if args.download_from:
         list0 = args.download_from.split(',')
