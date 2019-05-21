@@ -13,6 +13,9 @@ import spikeextractors as se
 from spikeforest import SFMdaRecordingExtractor, SFMdaSortingExtractor
 import sys
 import shlex
+import traceback
+from .install_kilosort2 import install_kilosort2
+#from ..ironclust.install_ironclust import install_ironclust
 # import h5py
 
 
@@ -34,12 +37,12 @@ class KiloSort2(mlpr.Processor):
       Original Kilosort2 code can be obtained from `https://github.com/MouseLand/Kilosort2.git`
     2. (optional) If Alex Morley's latest version doesn't work with SpikeForest, run
         `git checkout 43cbbfff89b9c88cdeb147ffd4ac35bfde9c7956`
-    3. In Matlab, run `CUDA\mexGPUall` to compile all CUDA codes
-    4. Add `KILOSORT2_PATH=...` in your .bashrc file.    
+    3. In Matlab, run `CUDA/mexGPUall` to compile all CUDA codes
+    4. Add `KILOSORT2_PATH=...` in your .bashrc file.
     """
         
     NAME = 'KiloSort2'
-    VERSION = '0.3.0'  # wrapper VERSION
+    VERSION = '0.3.1'  # wrapper VERSION
     ADDITIONAL_FILES = ['*.m']
     ENVIRONMENT_VARIABLES = [
         'NUM_WORKERS', 'MKL_NUM_THREADS', 'NUMEXPR_NUM_THREADS', 'OMP_NUM_THREADS']
@@ -51,12 +54,12 @@ class KiloSort2(mlpr.Processor):
         description='List of channels to use.', optional=True, default=[])
     firings_out = mlpr.Output('Output firings file')
 
-    detect_sign = mlpr.IntegerParameter(
-        'Use -1 or 1, depending on the sign of the spikes in the recording')
-    adjacency_radius = mlpr.FloatParameter(
-        'Use -1 to include all channels in every neighborhood')
+    detect_sign = mlpr.IntegerParameter(default=-1, optional=True, 
+        description='Use -1 or 1, depending on the sign of the spikes in the recording')
+    adjacency_radius = mlpr.FloatParameter(default=30, optional=True, 
+        description='Use -1 to include all channels in every neighborhood')
     detect_threshold = mlpr.FloatParameter(
-        optional=True, default=3, description='')
+        optional=True, default=6, description='')
     # prm_template_name=mlpr.StringParameter(optional=False,description='TODO')
     freq_min = mlpr.FloatParameter(
         optional=True, default=150, description='Use 0 for no bandpass filtering')
@@ -66,8 +69,12 @@ class KiloSort2(mlpr.Processor):
         optional=True, default=0.98, description='TODO')
     pc_per_chan = mlpr.IntegerParameter(
         optional=True, default=3, description='TODO')
+    minFR = mlpr.FloatParameter(default=1/50, optional=True, 
+        description='minimum spike rate (Hz), if a cluster falls below this for too long it gets removed')
 
     def run(self):
+        _keep_temp_files = True
+        
         code = ''.join(random.choice(string.ascii_uppercase)
                        for x in range(10))
         tmpdir = os.environ.get('TEMPDIR', '/tmp') + '/kilosort2-tmp-' + code
@@ -88,41 +95,62 @@ class KiloSort2(mlpr.Processor):
                 merge_thresh=self.merge_thresh,
                 freq_min=self.freq_min,
                 freq_max=self.freq_max,
-                pc_per_chan=self.pc_per_chan
+                pc_per_chan=self.pc_per_chan,
+                minFR=self.minFR
             )
             SFMdaSortingExtractor.write_sorting(
                 sorting=sorting, save_path=self.firings_out)
         except:
             if os.path.exists(tmpdir):
-                shutil.rmtree(tmpdir)
+                if not _keep_temp_files:
+                    print('removing tmpdir1')
+                    shutil.rmtree(tmpdir)
             raise
-        if not getattr(self, '_keep_temp_files', False):
+        if not _keep_temp_files:            
+            print('removing tmpdir2')
             shutil.rmtree(tmpdir)
+
 
 def kilosort2_helper(*,
                      recording,  # Recording object
                      tmpdir,  # Temporary working directory
                      detect_sign=-1,  # Polarity of the spikes, -1, 0, or 1
                      adjacency_radius=-1,  # Channel neighborhood adjacency radius corresponding to geom file
-                     detect_threshold=5,  # Threshold for detection
+                     detect_threshold=6,  # Threshold for detection
                      merge_thresh=.98,  # Cluster merging threhold 0..1
                      freq_min=150,  # Lower frequency limit for band-pass filter
                      freq_max=6000,  # Upper frequency limit for band-pass filter
-                     pc_per_chan=3,  # Number of pc per channel
-                     KILOSORT2_PATH=None,  # github kilosort2
-                     IRONCLUST_PATH=None  # github ironclust
+                     pc_per_chan=3, # number of PC per chan
+                     minFR=1/50
                      ):
-    if KILOSORT2_PATH is None:
-        KILOSORT2_PATH = os.getenv('KILOSORT2_PATH', None)
-    if not KILOSORT2_PATH:
-        raise Exception(
-            'You must either set the KILOSORT2_PATH environment variable, or pass the KILOSORT2_PATH parameter')
 
-    if IRONCLUST_PATH is None:
-        IRONCLUST_PATH = os.getenv('IRONCLUST_PATH', None)
-    if not IRONCLUST_PATH:
-        raise Exception(
-            'You must either set the IRONCLUST_PATH environment variable, or pass the IRONCLUST_PATH parameter')
+    # # TODO: do not require ks2 to depend on irc -- rather, put all necessary .m code in the spikeforest repo
+    # ironclust_path = os.environ.get('IRONCLUST_PATH_DEV', None)
+    # if ironclust_path:
+    #     print('Using ironclust from IRONCLUST_PATH_DEV directory: {}'.format(ironclust_path))
+    # else:
+    #     try:
+    #         print('Auto-installing ironclust.')
+    #         ironclust_path = install_ironclust(commit='042b600b014de13f6d11d3b4e50e849caafb4709')
+    #     except:
+    #         traceback.print_exc()
+    #         raise Exception('Problem installing ironclust. You can set the IRONCLUST_PATH_DEV to force to use a particular path.')
+    # print('For kilosort2, using ironclust utility functions from: {}'.format(ironclust_path))
+
+    kilosort2_path = os.environ.get('KILOSORT2_PATH_DEV', None)
+    if kilosort2_path:
+        print('Using kilosort2 from KILOSORT2_PATH_DEV directory: {}'.format(kilosort2_path))
+    else:
+        try:
+            print('Auto-installing kilosort2.')
+            kilosort2_path = install_kilosort2(
+                repo='https://github.com/alexmorley/Kilosort2',
+                commit='43cbbfff89b9c88cdeb147ffd4ac35bfde9c7956'
+            )
+        except:
+            traceback.print_exc()
+            raise Exception('Problem installing kilosort2. You can set the KILOSORT2_PATH_DEV to force to use a particular path.')
+    print('Using kilosort2 from: {}'.format(kilosort2_path))
 
     source_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -151,19 +179,21 @@ def kilosort2_helper(*,
     txt += 'freq_min={}\n'.format(freq_min)
     txt += 'freq_max={}\n'.format(freq_max)
     txt += 'pc_per_chan={}\n'.format(pc_per_chan)
+    txt += 'minFR={}\n'.format(minFR)
     _write_text_file(dataset_dir + '/argfile.txt', txt)
 
     print('Running Kilosort2 in {tmpdir}...'.format(tmpdir=tmpdir))
     cmd = '''
         addpath('{source_dir}');
+        addpath('{source_dir}/mdaio')
         try
-            p_kilosort2('{ksort}', '{iclust}', '{tmpdir}', '{raw}', '{geom}', '{firings}', '{arg}');
+            p_kilosort2('{ksort}', '{tmpdir}', '{raw}', '{geom}', '{firings}', '{arg}');
         catch
             quit(1);
         end
         quit(0);
         '''
-    cmd = cmd.format(source_dir=source_dir, ksort=KILOSORT2_PATH, iclust=IRONCLUST_PATH,
+    cmd = cmd.format(source_dir=source_dir, ksort=kilosort2_path,
                      tmpdir=tmpdir, raw=dataset_dir + '/raw.mda', geom=dataset_dir + '/geom.csv',
                      firings=tmpdir + '/firings.mda', arg=dataset_dir + '/argfile.txt')
     matlab_cmd = mlpr.ShellScript(cmd, script_path=tmpdir + '/run_kilosort2.m', keep_temp_files=True)
@@ -171,8 +201,8 @@ def kilosort2_helper(*,
     shell_cmd = '''
         #!/bin/bash
         cd {tmpdir}
-        echo '=====================' `date` '=====================' >> run_kilosort2.log
-        matlab -nosplash -nodisplay -r run_kilosort2 &>> run_kilosort2.log
+        echo '=====================' `date` '====================='
+        matlab -nosplash -nodisplay -r run_kilosort2
     '''.format(tmpdir=tmpdir)
     shell_cmd = mlpr.ShellScript(shell_cmd, script_path=tmpdir + '/run_kilosort2.sh', keep_temp_files=True)
     shell_cmd.write(tmpdir + '/run_kilosort2.sh')
@@ -201,18 +231,3 @@ def _read_text_file(fname):
 def _write_text_file(fname, str):
     with open(fname, 'w') as f:
         f.write(str)
-
-
-def _run_command_and_print_output(command):
-    with Popen(shlex.split(command), stdout=PIPE, stderr=PIPE) as process:
-        while True:
-            output_stdout = process.stdout.readline()
-            output_stderr = process.stderr.readline()
-            if (not output_stdout) and (not output_stderr) and (process.poll() is not None):
-                break
-            if output_stdout:
-                print(output_stdout.decode())
-            if output_stderr:
-                print(output_stderr.decode())
-        rc = process.poll()
-        return rc
