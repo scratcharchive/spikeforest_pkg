@@ -19,12 +19,11 @@ from .install_ironclust import install_ironclust
 
 class IronClust(mlpr.Processor):
     NAME = 'IronClust'
-    VERSION = '0.3.3'
+    VERSION = '0.3.4'
     ENVIRONMENT_VARIABLES = [
         'NUM_WORKERS', 'MKL_NUM_THREADS', 'NUMEXPR_NUM_THREADS', 'OMP_NUM_THREADS', 'TEMPDIR']
     ADDITIONAL_FILES = ['*.m']
     CONTAINER = None
-    CONTAINER_SHARE_ID = None
 
     recording_dir = mlpr.Input('Directory of recording', directory=True)
     firings_out = mlpr.Output('Output firings file')
@@ -95,14 +94,18 @@ class IronClust(mlpr.Processor):
     feature_type = mlpr.StringParameter(
         optional=True, default='gpca', description='{gpca, pca, vpp, vmin, vminmax, cov, energy, xcov}')
 
+    @staticmethod
+    def install():
+        print('Auto-installing ironclust.')
+        return install_ironclust(commit='785712be88bbb2cc03e26d96a43249a46a0f0ed3')
+
     def run(self):
         ironclust_path = os.environ.get('IRONCLUST_PATH_DEV', None)
         if ironclust_path:
             print('Using ironclust from IRONCLUST_PATH_DEV directory: {}'.format(ironclust_path))
         else:
             try:
-                print('Auto-installing ironclust.')
-                ironclust_path = install_ironclust(commit='785712be88bbb2cc03e26d96a43249a46a0f0ed3')
+                ironclust_path = IronClust.install()
             except:
                 traceback.print_exc()
                 raise Exception('Problem installing ironclust. You can set the IRONCLUST_PATH_DEV to force to use a particular path.')

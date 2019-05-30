@@ -11,7 +11,7 @@ import string
 import shutil
 from .yasssortingextractor import yassSortingExtractor
 from .tools import saveProbeFile
-from .sfmdaextractors import SFMdaRecordingExtractor, SFMdaSortingExtractor
+from spikeforest import SFMdaRecordingExtractor, SFMdaSortingExtractor
 import spikeextractors as se
 
 # yass uses negative polarity by default
@@ -24,6 +24,7 @@ class YASS(mlpr.Processor):
     ENVIRONMENT_VARIABLES = [
         'NUM_WORKERS', 'MKL_NUM_THREADS', 'NUMEXPR_NUM_THREADS', 'OMP_NUM_THREADS']
     ADDITIONAL_FILES = ['*.yaml']
+    LOCAL_MODULES = ['../../spikeforest']
 
     # The following container uses python 2
     # CONTAINER = 'sha1://087767605e10761331699dda29519444bbd823f4/02-12-2019/yass.simg'
@@ -31,18 +32,16 @@ class YASS(mlpr.Processor):
     # this one uses python 3
     CONTAINER = 'sha1://9f0b23510b3c221a5700ac378de4d978ccc1a196/2019-05-06/yass.simg'
 
-    # CONTAINER_SHARE_ID = '69432e9201d0'  # place to look for container
-
     recording_dir = mlpr.Input('Directory of recording', directory=True)
     channels = mlpr.IntegerListParameter(
         description='List of channels to use.', optional=True, default=[])
     firings_out = mlpr.Output('Output firings file')
     # paramfile_out = mlpr.Output('YASS yaml config file')
 
-    detect_sign = mlpr.IntegerParameter(optional=True, default=-1, 
-        description='-1, 1, or 0')
-    adjacency_radius = mlpr.FloatParameter(optional=True, default=70, 
-        description='Channel neighborhood adjacency radius corresponding to geom file')
+    detect_sign = mlpr.IntegerParameter(optional=True, default=-1,
+                                        description='-1, 1, or 0')
+    adjacency_radius = mlpr.FloatParameter(optional=True, default=70,
+                                           description='Channel neighborhood adjacency radius corresponding to geom file')
     template_width_ms = mlpr.FloatParameter(
         optional=True, default=1, description='Spike width in milliseconds')
     filter = mlpr.BoolParameter(optional=True, default=True)

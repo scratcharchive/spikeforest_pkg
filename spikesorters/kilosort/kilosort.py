@@ -32,14 +32,14 @@ class KiloSort(mlpr.Processor):
     3. In Matlab, run `CUDA/mexGPUall` to compile all CUDA codes
     4. Add `KILOSORT_PATH_DEV=...` in your .bashrc file.
     """
-            
+
     NAME = 'KiloSort'
     VERSION = '0.2.1'  # wrapper VERSION
     ADDITIONAL_FILES = ['*.m']
     ENVIRONMENT_VARIABLES = [
         'NUM_WORKERS', 'MKL_NUM_THREADS', 'NUMEXPR_NUM_THREADS', 'OMP_NUM_THREADS']
     CONTAINER = None
-    CONTAINER_SHARE_ID = None
+    LOCAL_MODULES = ['../../spikeforest']
 
     recording_dir = mlpr.Input('Directory of recording', directory=True)
     channels = mlpr.IntegerListParameter(
@@ -47,9 +47,9 @@ class KiloSort(mlpr.Processor):
     firings_out = mlpr.Output('Output firings file')
 
     detect_sign = mlpr.IntegerParameter(optional=True, default=-1,
-        description='Use -1 or 1, depending on the sign of the spikes in the recording')
+                                        description='Use -1 or 1, depending on the sign of the spikes in the recording')
     adjacency_radius = mlpr.FloatParameter(optional=True, default=-1,
-        description='Currently unused')
+                                           description='Currently unused')
     detect_threshold = mlpr.FloatParameter(
         optional=True, default=3, description='')
     # prm_template_name=mlpr.StringParameter(optional=False,description='TODO')
@@ -61,6 +61,14 @@ class KiloSort(mlpr.Processor):
         optional=True, default=0.98, description='TODO')
     pc_per_chan = mlpr.IntegerParameter(
         optional=True, default=3, description='TODO')
+
+    @staticmethod
+    def install():
+        print('Auto-installing kilosort.')
+        return install_kilosort(
+            repo='https://github.com/cortex-lab/KiloSort.git',
+            commit='3f33771f8fdf8c3846a7f8a75cc8c318b44ed48c'
+        )
 
     def run(self):
         keep_temp_files = False
@@ -113,11 +121,7 @@ def kilosort_helper(*,
         print('Using kilosort from KILOSORT_PATH_DEV directory: {}'.format(kilosort_path))
     else:
         try:
-            print('Auto-installing kilosort.')
-            kilosort_path = install_kilosort(
-                repo='https://github.com/cortex-lab/KiloSort.git',
-                commit='3f33771f8fdf8c3846a7f8a75cc8c318b44ed48c'
-            )
+            kilosort_path = KiloSort.install()
         except:
             traceback.print_exc()
             raise Exception('Problem installing kilosort. You can set the KILOSORT_PATH_DEV to force to use a particular path.')

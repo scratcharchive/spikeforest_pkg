@@ -3,7 +3,7 @@ import os
 import sys
 from .bandpass_filter import bandpass_filter
 from .whiten import whiten
-from .sfmdaextractors import SFMdaRecordingExtractor, SFMdaSortingExtractor
+from spikeforest import SFMdaRecordingExtractor, SFMdaSortingExtractor
 
 
 class MountainSort4(mlpr.Processor):
@@ -12,8 +12,7 @@ class MountainSort4(mlpr.Processor):
     ENVIRONMENT_VARIABLES = [
         'NUM_WORKERS', 'MKL_NUM_THREADS', 'NUMEXPR_NUM_THREADS', 'OMP_NUM_THREADS']
     CONTAINER = 'sha1://e06fee7f72f6b66d80d899ebc08e7c39e5a2458e/2019-05-06/mountainsort4.simg'
-    # CONTAINER_SHARE_ID = '69432e9201d0'  # place to look for container
-    PYTHON_PACKAGES = ['../../spikeforest']
+    LOCAL_MODULES = ['../../spikeforest']
 
     recording_dir = mlpr.Input('Directory of recording', directory=True)
     firings_out = mlpr.Output('Output firings file')
@@ -87,7 +86,6 @@ class MountainSort4TestError(mlpr.Processor):
     ENVIRONMENT_VARIABLES = [
         'NUM_WORKERS', 'MKL_NUM_THREADS', 'NUMEXPR_NUM_THREADS', 'OMP_NUM_THREADS']
     CONTAINER = 'sha1://e06fee7f72f6b66d80d899ebc08e7c39e5a2458e/2019-05-06/mountainsort4.simg'
-    # CONTAINER_SHARE_ID = '69432e9201d0'  # place to look for container
 
     recording_dir = mlpr.Input('Directory of recording', directory=True)
     firings_out = mlpr.Output('Output firings file')
