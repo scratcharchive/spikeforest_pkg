@@ -9,7 +9,7 @@ import shlex
 import random
 import string
 import shutil
-from .yasssortingextractor import yassSortingExtractor
+from .yasssortingextractor1 import yassSortingExtractor1
 from .tools import saveProbeFile
 from .sfmdaextractors import SFMdaRecordingExtractor, SFMdaSortingExtractor
 import spikeextractors as se
@@ -17,9 +17,9 @@ import spikeextractors as se
 # yass uses negative polarity by default
 
 
-class YASS(mlpr.Processor):
-    NAME = 'YASS'
-    VERSION = '0.1.1'
+class YASS1(mlpr.Processor):
+    NAME = 'YASS1'
+    VERSION = '0.0.1'
     # used by container to pass the env variables
     ENVIRONMENT_VARIABLES = [
         'NUM_WORKERS', 'MKL_NUM_THREADS', 'NUMEXPR_NUM_THREADS', 'OMP_NUM_THREADS']
@@ -29,7 +29,7 @@ class YASS(mlpr.Processor):
     # CONTAINER = 'sha1://087767605e10761331699dda29519444bbd823f4/02-12-2019/yass.simg'
 
     # this one uses python 3
-    CONTAINER = 'sha1://9f0b23510b3c221a5700ac378de4d978ccc1a196/2019-05-06/yass.simg'
+    CONTAINER = 'sha1://85f443e414ac454f2057553bf6436131d0eb6245/yass1.simg'
 
     # CONTAINER_SHARE_ID = '69432e9201d0'  # place to look for container
 
@@ -41,8 +41,8 @@ class YASS(mlpr.Processor):
 
     detect_sign = mlpr.IntegerParameter(optional=True, default=-1, 
         description='-1, 1, or 0')
-    adjacency_radius = mlpr.FloatParameter(optional=True, default=70, 
-        description='Channel neighborhood adjacency radius corresponding to geom file')
+    adjacency_radius = mlpr.FloatParameter(
+        optional=True, default=70, description='Channel neighborhood adjacency radius corresponding to geom file')
     template_width_ms = mlpr.FloatParameter(
         optional=True, default=1, description='Spike width in milliseconds')
     filter = mlpr.BoolParameter(optional=True, default=True)
@@ -75,10 +75,12 @@ class YASS(mlpr.Processor):
             # shutil.copyfile(yaml_file, self.paramfile_out)
         except:
             if os.path.exists(tmpdir):
-                shutil.rmtree(tmpdir)
+                # shutil.rmtree(tmpdir)
+                print('not deleted tmpdir1')
             raise
         if not getattr(self, '_keep_temp_files', False):
-            shutil.rmtree(tmpdir)
+            # shutil.rmtree(tmpdir)
+            print('not deleted tmpdir2')
 
 
 def yass_helper(
@@ -154,7 +156,7 @@ def yass_helper(
     #    raise Exception('yass merging returned a non-zero exit code')
     processing_time = time.time() - t_start_proc
     print('Elapsed time: ', processing_time)
-    sorting = yassSortingExtractor(join_abspath_(output_folder, 'tmp'))
+    sorting = yassSortingExtractor1(output_folder)
 
     return sorting, yaml_file
 

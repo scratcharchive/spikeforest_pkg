@@ -19,7 +19,7 @@ from .install_ironclust import install_ironclust
 
 class IronClust(mlpr.Processor):
     NAME = 'IronClust'
-    VERSION = '0.2.6'
+    VERSION = '0.3.3'
     ENVIRONMENT_VARIABLES = [
         'NUM_WORKERS', 'MKL_NUM_THREADS', 'NUMEXPR_NUM_THREADS', 'OMP_NUM_THREADS', 'TEMPDIR']
     ADDITIONAL_FILES = ['*.m']
@@ -61,7 +61,7 @@ class IronClust(mlpr.Processor):
         description='Use 0 for no bandpass filtering'
     )
     merge_thresh = mlpr.FloatParameter(
-        optional=True, default=0.99,
+        optional=True, default=0.975,
         description='Threshold for automated merging'
     )
     pc_per_chan = mlpr.IntegerParameter(
@@ -78,10 +78,10 @@ class IronClust(mlpr.Processor):
         optional=True, default='none', description='{none, bandpass, wiener, fftdiff, ndiff}')
     common_ref_type = mlpr.StringParameter(
         optional=True, default='none', description='{none, mean, median}')
-    nTime_clu = mlpr.IntegerParameter(
-        optional=True, default=2, description='Number of time periods to cluster together')
-    nTime_drift = mlpr.IntegerParameter(
-        optional=True, default=64, description='Number of time segments for drift correction')
+    batch_sec_drift = mlpr.FloatParameter(
+        optional=True, default=600, description='batch duration in seconds. clustering time duration')
+    step_sec_drift = mlpr.FloatParameter(
+        optional=True, default=20, description='compute anatomical similarity every n sec')
     knn = mlpr.IntegerParameter(
         optional=True, default=30, description='K nearest neighbors')
     min_count = mlpr.IntegerParameter(
@@ -102,7 +102,7 @@ class IronClust(mlpr.Processor):
         else:
             try:
                 print('Auto-installing ironclust.')
-                ironclust_path = install_ironclust(commit='042b600b014de13f6d11d3b4e50e849caafb4709')
+                ironclust_path = install_ironclust(commit='785712be88bbb2cc03e26d96a43249a46a0f0ed3')
             except:
                 traceback.print_exc()
                 raise Exception('Problem installing ironclust. You can set the IRONCLUST_PATH_DEV to force to use a particular path.')
