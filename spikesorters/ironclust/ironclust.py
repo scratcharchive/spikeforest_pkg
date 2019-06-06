@@ -19,7 +19,7 @@ from .install_ironclust import install_ironclust
 
 class IronClust(mlpr.Processor):
     NAME = 'IronClust'
-    VERSION = '0.3.5'
+    VERSION = '0.3.10'
     ENVIRONMENT_VARIABLES = [
         'NUM_WORKERS', 'MKL_NUM_THREADS', 'NUMEXPR_NUM_THREADS', 'OMP_NUM_THREADS', 'TEMPDIR']
     ADDITIONAL_FILES = ['*.m']
@@ -78,7 +78,7 @@ class IronClust(mlpr.Processor):
     common_ref_type = mlpr.StringParameter(
         optional=True, default='none', description='{none, mean, median}')
     batch_sec_drift = mlpr.FloatParameter(
-        optional=True, default=600, description='batch duration in seconds. clustering time duration')
+        optional=True, default=300, description='batch duration in seconds. clustering time duration')
     step_sec_drift = mlpr.FloatParameter(
         optional=True, default=20, description='compute anatomical similarity every n sec')
     knn = mlpr.IntegerParameter(
@@ -97,7 +97,7 @@ class IronClust(mlpr.Processor):
     @staticmethod
     def install():
         print('Auto-installing ironclust.')
-        return install_ironclust(commit='5d72a0bf871fae5f166175dd52c63ea2274e2b3c')
+        return install_ironclust(commit='238d151b5407fda7bf2a779c1105638c1c9e8292')
 
     def run(self):
         ironclust_path = os.environ.get('IRONCLUST_PATH_DEV', None)
@@ -114,8 +114,6 @@ class IronClust(mlpr.Processor):
         code = ''.join(random.choice(string.ascii_uppercase)
                        for x in range(10))
         tmpdir = os.environ.get('TEMPDIR', '/tmp') + '/ironclust-tmp-' + code
-
-        print('------------------------------------- using', tmpdir)
 
         try:
             recording = SFMdaRecordingExtractor(self.recording_dir)
@@ -159,7 +157,7 @@ def ironclust_helper(
     dataset_dir = tmpdir + '/ironclust_dataset'
     # Generate three files in the dataset directory: raw.mda, geom.csv, params.json
     SFMdaRecordingExtractor.write_recording(
-        recording=recording, save_path=dataset_dir, params=params)
+        recording=recording, save_path=dataset_dir, params=params, _preserve_dtype=True)
 
     samplerate = recording.get_sampling_frequency()
 
@@ -175,28 +173,7 @@ def ironclust_helper(
     txt = ''
     for key0, val0 in kwargs.items():
         txt += '{}={}\n'.format(key0, val0)
-    # txt += 'samplerate={}\n'.format(samplerate)
-    # txt += 'detect_sign={}\n'.format(detect_sign)
-    # txt += 'adjacency_radius={}\n'.format(adjacency_radius)
-    # txt += 'detect_threshold={}\n'.format(detect_threshold)
-    # txt += 'merge_thresh={}\n'.format(merge_thresh)
-    # txt += 'freq_min={}\n'.format(freq_min)
-    # txt += 'freq_max={}\n'.format(freq_max)
-    # txt += 'pc_per_chan={}\n'.format(pc_per_chan)
-    # txt += 'prm_template_name={}\n'.format(prm_template_name)
-    # txt += 'whiten={}\n'.format(whiten)
-    # txt += 'filter_type={}\n'.format(filter_type)
-    # txt += 'filter_detect_type={}\n'.format(filter_detect_type)
-    # txt += 'common_ref_type={}\n'.format(common_ref_type)
-    # txt += 'nTime_clu={}\n'.format(nTime_clu)
-    # txt += 'nTime_drift={}\n'.format(nTime_drift)
-    # txt += 'knn={}\n'.format(knn)
-    # txt += 'min_count={}\n'.format(min_count)
-    # txt += 'fGpu={}\n'.format(fGpu)
-    # txt += 'fft_thresh={}\n'.format(fft_thresh)
-    # txt += 'nSites_whiten={}\n'.format(nSites_whiten)
-    # txt += 'feature_type={}\n'.format(feature_type)
-
+    txt += 'samplerate={}\n'.format(samplerate)
     if 'scale_factor' in params:
         txt += 'scale_factor={}\n'.format(params["scale_factor"])
     _write_text_file(dataset_dir + '/argfile.txt', txt)
