@@ -8,10 +8,22 @@ RUN ln -s python3 /usr/bin/python
 RUN ln -s pip3 /usr/bin/pip
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python3-tk
 
-RUN echo "29 March 2019"
+RUN echo "26 June 2019"
+
+RUN mkdir /src
 
 #########################################
-# spikeforest dependencies
-RUN pip install numpy scipy matplotlib requests pillow pandas ipython h5py setuptools-git scikit-learn python-frontmatter
+### MountainSort
+RUN pip install pybind11
+RUN pip install isosplit5
+RUN git clone https://github.com/magland/ml_ms4alg /src/ml_ms4alg
+WORKDIR /src/ml_ms4alg
+RUN python setup.py develop
+
+### spikeextractors
 RUN pip install spikeextractors==0.4.2
 RUN pip install spiketoolkit==0.3.4
+RUN pip install git+https://github.com/spikeinterface/spikesorters
+
+### Other dependencies
+RUN pip install requests
