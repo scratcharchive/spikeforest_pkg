@@ -15,7 +15,7 @@ from .install_ironclust import install_ironclust
 
 class IronClust(mlpr.Processor):
     NAME = 'IronClust'
-    VERSION = '0.5.1'
+    VERSION = '0.5.3'
     ENVIRONMENT_VARIABLES = [
         'NUM_WORKERS', 'MKL_NUM_THREADS', 'NUMEXPR_NUM_THREADS', 'OMP_NUM_THREADS', 'TEMPDIR']
     CONTAINER: Union[str, None] = None
@@ -100,7 +100,7 @@ class IronClust(mlpr.Processor):
     @staticmethod
     def install():
         print('Auto-installing ironclust.')
-        return install_ironclust(commit='82c9b912b5d22d12b9901dc0f5d3c227d405ce79')
+        return install_ironclust(commit='945e3035ff89701ad31a39f930790a1e0894e435')
 
     def run(self):
         import spikesorters as sorters
